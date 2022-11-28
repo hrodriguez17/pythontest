@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from matplotlib.lines import Line2D
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
@@ -17,7 +18,7 @@ def get_game(name, df):
 
 def run_rec(game_id):
     with st.spinner('Wait for it...'):
-        cm = CountVectorizer(lowercase=True, max_features=10000, max_df=0.1, min_df=1, ngram_range=(1, 2),
+        cm = CountVectorizer(lowercase=True,  max_df=.12, min_df=1, ngram_range=(1, 1),
                              stop_words="english",).fit_transform(game_data['Summary'].values.astype('U'))
 
         cs = cosine_similarity(cm)
@@ -41,14 +42,26 @@ def run_rec(game_id):
             if j >= 5:
                 break
 
+        arrs = [0,1]
+        rows, cols = 5, 5
+
+        arr = []
+        for i in sorted_scores:
+            col = game_data[game_data.id == item[0]]['Name'].values[0]
+            col.append(item[1])
+            arr.append(col)
+        print(arr)
+
+
+
 
 def get_map():
     with st.spinner('Visuals...'):
 
         df = game_data
 
-        vectorizer = TfidfVectorizer(lowercase=True, max_features=1000, max_df=0.1, min_df=1,
-                                     ngram_range=(1, 2), stop_words="english")
+        vectorizer = TfidfVectorizer(lowercase=True, max_df=.12, min_df=1,
+                                     ngram_range=(1, 1), stop_words="english")
 
         vectors = vectorizer.fit_transform(df['Summary'])
         feature_names = vectorizer.get_feature_names_out()
@@ -68,8 +81,9 @@ def get_map():
             all_keywords.append(keywords)
 
         true_k = 6
-        colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22",
-                  "#17becf", "#F0F8FF", "#FAEBD7", "#00FFFF", "#7FFFD4", "#F0FFFF", "#F5F5DC", "#FFE4C4"]
+        colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
+        colors3 = ['aqua', 'red', 'gold', 'royalblue', 'darkorange', 'green', 'purple', 'cyan', 'yellow', 'lime']
+        colors2 = [1, 2, 3, 4, 5]
         model = KMeans(n_clusters=true_k, init="k-means++", max_iter=100, n_init=1)
 
         model.fit(vectors)
@@ -91,6 +105,23 @@ def get_map():
         results = {}
         print("done with txt")
 
+        arr = []
+        rows, cols = 6, 10
+        for i in range(true_k):
+            col = [(f"Cluster {i}")]
+            for ind in order_centroids[i, :10]:
+                col.append(terms[ind])
+            arr.append(col)
+        print(arr)
+
+        df = pd.DataFrame(arr)
+        df = df.transpose()
+        new_header = df.iloc[0]  # grab the first row for the header
+        df = df[1:]  # take the data less the header row
+        df.columns = new_header
+
+        st.table(df)
+
         df2 = game_data
         # Map
         docFull = df2
@@ -102,13 +133,23 @@ def get_map():
         x_axis = [o[0] for o in scatter_plot_points]
         y_axis = [o[1] for o in scatter_plot_points]
 
-        fig, ax = plt.subplots(figsize=(40, 40))
-        ax.scatter(x_axis, y_axis, c=[colors[d] for d in kmean_indices])
-
+        fig, ax = plt.subplots(figsize=(25, 25))
+        ax.scatter(x_axis, y_axis, c=[colors[d] for d in kmean_indices], label="k")
+        legend_elements = [Line2D([0], [0], marker='o', color='w', label='Cluster {}'.format(i + 1),
+                                  markerfacecolor=mcolor, markersize=5) for i, mcolor in enumerate(colors)]
+        plt.legend(handles=legend_elements, loc='upper right')
         for i, txt in enumerate(names):
             ax.annotate(txt[0:0], (x_axis[i], y_axis[i]))
         st.pyplot(fig)
+        fig, ax = plt.subplots(figsize=(10, 10))
         plt.hist(model.labels_, bins=true_k)
+        rects = ax.patches
+        labels = ["Cluster%d" % i for i in range(len(rects))]
+
+        for rect, label in zip(rects, labels):
+            height = rect.get_height()
+            ax.text(rect.get_x() + rect.get_width() / 2, height + 0.01, label,
+                    ha='center', va='bottom')
         st.pyplot(plt)
 
 
