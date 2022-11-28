@@ -138,8 +138,6 @@ def get_map():
         legend_elements = [Line2D([0], [0], marker='o', color='w', label='Cluster {}'.format(i + 1),
                                   markerfacecolor=mcolor, markersize=5) for i, mcolor in enumerate(colors)]
         plt.legend(handles=legend_elements, loc='upper right')
-        for i, txt in enumerate(names):
-            ax.annotate(txt[0:0], (x_axis[i], y_axis[i]))
         st.pyplot(fig)
         fig, ax = plt.subplots(figsize=(10, 10))
         plt.hist(model.labels_, bins=true_k)
