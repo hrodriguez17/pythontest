@@ -18,8 +18,8 @@ def get_game(name, df):
 
 def run_rec(game_id):
     with st.spinner('Wait for it...'):
-        cm = CountVectorizer(lowercase=True,  max_df=.12, min_df=1, ngram_range=(1, 1),
-                             stop_words="english",).fit_transform(game_data['Summary'].values.astype('U'))
+        cm = CountVectorizer(lowercase=True, max_df=.12, min_df=1, ngram_range=(1, 1),
+                             stop_words="english", ).fit_transform(game_data['Summary'].values.astype('U'))
 
         cs = cosine_similarity(cm)
 
@@ -42,7 +42,7 @@ def run_rec(game_id):
             if j >= 5:
                 break
 
-        arrs = [0,1]
+        arrs = [0, 1]
         rows, cols = 5, 5
 
         arr = []
@@ -53,14 +53,12 @@ def run_rec(game_id):
         # print(arr)
 
 
-
-
 def get_map():
     with st.spinner('Visuals...'):
 
         df = game_data
 
-        vectorizer = TfidfVectorizer(lowercase=True, max_df=.12, min_df=1,
+        vectorizer = TfidfVectorizer(lowercase=True, max_features=500, max_df=.12, min_df=1,
                                      ngram_range=(1, 1), stop_words="english")
 
         vectors = vectorizer.fit_transform(df['Summary'])
