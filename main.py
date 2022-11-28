@@ -46,11 +46,11 @@ def run_rec(game_id):
         rows, cols = 5, 5
 
         arr = []
-        for i in sorted_scores:
-            col = game_data[game_data.id == item[0]]['Name'].values[0]
-            col.append(item[1])
-            arr.append(col)
-        print(arr)
+        # for i in sorted_scores:
+        #     col = game_data[game_data.id == item[0]]['Name'].values[0]
+        #     col.append(item[1])
+        #     arr.append(col)
+        # print(arr)
 
 
 
