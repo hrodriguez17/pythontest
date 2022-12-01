@@ -5,11 +5,11 @@ from nltk.stem import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer
 import string
 from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import linear_kernel
 
 
 def remove_stops(text, stops):
     text = re.sub("new", "", text)
+    text = re.sub("New", "", text)
     text = re.sub("access", "", text)
     text = re.sub("ACCESS", "", text)
     text = re.sub("free", "", text)
@@ -45,6 +45,113 @@ def remove_stops(text, stops):
     text = re.sub("Point click ", "pointclick", text)
     text = re.sub("point Click ", "pointclick", text)
     text = re.sub("Point & Click", "pointclick", text)
+    text = re.sub("Massively Multiplayer", "mmo", text)
+    text = re.sub("Studio", "", text)
+    text = re.sub("Studio ", "", text)
+    text = re.sub("studio ", "", text)
+    text = re.sub("STUDIO", "", text)
+    text = re.sub("studios", "", text)
+    text = re.sub("Studios", "", text)
+    text = re.sub("ReValue", "", text)
+    text = re.sub("matter", "", text)
+    text = re.sub("Matter", "", text)
+    text = re.sub("choose", "", text)
+    text = re.sub("Choose", "", text)
+    text = re.sub("choices", "", text)
+    text = re.sub("Choices", "", text)
+    text = re.sub("crafting", "craft", text)
+    text = re.sub("Crafting", "craft", text)
+    text = re.sub("character", "", text)
+    text = re.sub("Character", "", text)
+    text = re.sub("Character", "", text)
+    text = re.sub("local", "", text)
+    text = re.sub("Local", "", text)
+    text = re.sub("family friendly", "familyfriendly", text)
+    text = re.sub("Family friendly", "familyfriendly", text)
+    text = re.sub("family Friendly", "familyfriendly", text)
+    text = re.sub("Family Friendly", "familyfriendly", text)
+    text = re.sub(" friendly", "", text)
+    text = re.sub(" Friendly", "", text)
+    text = re.sub("friends", "", text)
+    text = re.sub("Friends", "", text)
+    text = re.sub("llc", "", text)
+    text = re.sub("LLC", "", text)
+    text = re.sub("digital", "", text)
+    text = re.sub("different", "", text)
+    text = re.sub(" amp", "", text)
+    text = re.sub("amp ", "", text)
+    text = re.sub(" make ", "", text)
+    text = re.sub(" Make ", "", text)
+    text = re.sub(" year ", "", text)
+    text = re.sub(" Year ", "", text)
+    text = re.sub("year ", "", text)
+    text = re.sub("Year ", "", text)
+    text = re.sub("Player", "", text)
+    text = re.sub("player", "", text)
+    text = re.sub("Players", "", text)
+    text = re.sub("players", "", text)
+    text = re.sub("content", "", text)
+    text = re.sub("Content", "", text)
+    text = re.sub(" building", "build", text)
+    text = re.sub(" Building", "build", text)
+    text = re.sub("builder", "build", text)
+    text = re.sub("Builder", "build", text)
+    text = re.sub("builderbuilder", "build", text)
+    text = re.sub("amp", "", text)
+    text = re.sub("Amp", "", text)
+    text = re.sub("bring", "", text)
+    text = re.sub("Bring", "", text)
+    text = re.sub("place", "", text)
+    text = re.sub("Place", "", text)
+    text = re.sub("join", "", text)
+    text = re.sub("Join", "", text)
+    text = re.sub("come", "", text)
+    text = re.sub("Come", "", text)
+    text = re.sub("alternate", "", text)
+    text = re.sub("Alternate", "", text)
+    text = re.sub("pc", "", text)
+    text = re.sub("Pc", "", text)
+    text = re.sub("PC", "", text)
+    text = re.sub("mode", "", text)
+    text = re.sub("Mode", "", text)
+    text = re.sub("dy", "", text)
+    text = re.sub("Dy", "", text)
+    text = re.sub("perma death", "permadeath", text)
+    text = re.sub("Perma death", "permadeath", text)
+    text = re.sub("perma Death", "permadeath", text)
+    text = re.sub("Perma Death", "permadeath", text)
+    text = re.sub("popular", " ", text)
+    text = re.sub("Popular", " ", text)
+    text = re.sub("genre", "", text)
+    text = re.sub("Genre", "", text)
+    text = re.sub("tactics", "tactical", text)
+    text = re.sub("Tactics", "tactical", text)
+    text = re.sub("returns", "", text)
+    text = re.sub("Returns", "", text)
+    text = re.sub(" way", "", text)
+    text = re.sub("Way", "", text)
+    text = re.sub("endings", "", text)
+    text = re.sub("Endings", "", text)
+    text = re.sub("sexual", "mature", text)
+    text = re.sub("Sexual", "mature", text)
+    text = re.sub("nudity", "mature", text)
+    text = re.sub("Nudity", "mature", text)
+    text = re.sub("Hentai", "mature", text)
+    text = re.sub("hentai", "mature", text)
+    text = re.sub("Multiple", "", text)
+    text = re.sub("multiple", "", text)
+    text = re.sub(" game", "", text)
+    text = re.sub(" Game", "", text)
+    text = re.sub(" games", "", text)
+    text = re.sub(" Games", "", text)
+    text = re.sub("simulation", "sim", text)
+    text = re.sub("Simulation", "sim", text)
+    text = re.sub("Single", "", text)
+    text = re.sub("single", "", text)
+    text = re.sub("Adventure", "", text)
+    text = re.sub("adventure", "", text)
+
+
 
     things = text.split()
     final = []
@@ -96,12 +203,10 @@ df.to_csv('file.csv', sep=';', index=False)
 
 df = pd.read_csv('file.csv', encoding="utf-8", sep=';', nrows=10000, index_col=False)
 
-column = df.columns.tolist()
-
 features = []
 
 for i in range(0, df.shape[0]):
-    features.append(str(df['Developer'][i]) + ' '
+    features.append(str(df['Name'][i]) + str(df['Short Description'][i]) + str(df['Developer'][i]) + ' '
                     + str(df['Publisher'][i]) + ' ' + str(df['Genre'][i]) + ' ' + str(df['Tags'][i]))
 
 df["Summary"] = features
@@ -117,6 +222,7 @@ for item in df["Name"]:
         words = re.sub(key, value, item)
     desc2.append(words)
 df["Name"] = desc2
+
 desc3 = []
 for item in df["Name"]:
     for key, value in char_to_replace.items():
@@ -126,10 +232,11 @@ df["Name"] = desc3
 
 df.to_csv('file.csv', sep=';', index=True, index_label='id')
 df = pd.read_csv('file.csv', encoding="utf-8", sep=';')
-df2 = df[["Name", "Summary"]]
+df2 = df[["Name", "Summary", "Positive Reviews"]]
 
 df2 = df2.drop_duplicates(subset=["Name"])
-vectorizer = TfidfVectorizer(lowercase=True, max_features=10000, max_df=0.2, min_df=500,
+
+vectorizer = TfidfVectorizer(lowercase=True, max_features=10000, max_df=0.8, min_df=1,
                              ngram_range=(1, 1), stop_words="english")
 
 vectors = vectorizer.fit_transform(df2['Summary'])
@@ -150,14 +257,7 @@ for summaries in denseList:
         x = x + 1
     all_keywords.append(keywords)
 
-true_k = 36
-colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22",
-          "#17becf",
-          "#F0F8FF", "#FAEBD7", "#00FFFF", "#7FFFD4", "#F0FFFF", "#F5F5DC", "#FFE4C4", "#000000", "#FFEBCD",
-          "#0000FF",
-          "#8A2BE2", "#A52A2A", "#DEB887", "#5F9EA0", "#7e1e9c", "#7FFF00", "#D2691E", "#FFF8DC", "#DC143C",
-          "#00008B",
-          "#B8860B", "#A9A9A9", "#006400", "#BDB76B", "#8B008B", "#556B2F"]
+true_k = 6
 
 model = KMeans(n_clusters=true_k, init="k-means++", max_iter=100, n_init=1)
 
@@ -176,14 +276,7 @@ with open("results.txt", "w", encoding="utf-8") as f:
         f.write("\n")
         f.write("\n")
 
-cosine_similarities = linear_kernel(vectors, vectors)
-results = {}
-
-
-def item(id):
-    return docFull.loc[docFull['id'] == id]['description'].tolist()[0].split(' - ')[0]
-
-
 df2.to_csv('file2.csv', sep=';', index=False)
 df2 = pd.read_csv('file2.csv', encoding="utf-8", sep=';')
 df2.to_csv('file2.csv', sep=';', index_label='id')
+# print(df2)

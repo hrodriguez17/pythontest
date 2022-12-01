@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
 from matplotlib.lines import Line2D
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
-from sklearn.metrics.pairwise import linear_kernel
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from PIL import Image
+from sklearn.metrics.pairwise import linear_kernel
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 
@@ -16,41 +15,43 @@ def get_game(name, df):
     return game_id
 
 
+def pop_bar(chart):
+    chart = chart.set_index("Name")
+    st.bar_chart(chart)
+
+
 def run_rec(game_id):
     with st.spinner('Wait for it...'):
-        cm = CountVectorizer(lowercase=True, max_df=.12, min_df=1, ngram_range=(1, 1),
-                             stop_words="english", ).fit_transform(game_data['Summary'].values.astype('U'))
-
-        cs = cosine_similarity(cm)
-
         game = game_data['Name'][game_id]
-
         game_id = game_data[game_data.Name == game]['id'].values[0]
 
-        scores = list(enumerate(cs[game_id]))
-
-        sorted_scores = sorted(scores, key=lambda x: x[1], reverse=True)
-        sorted_scores = sorted_scores[1:]
-        j = 0
         st.write("Here are your recommendations for: " + str(game))
-        for item in sorted_scores:
+        column = ["Name", "Positive Reviews"]
+        chart = pd.DataFrame(columns=column)
+
+        tfidf = TfidfVectorizer(lowercase=True, max_features=10000, max_df=.2, min_df=50,
+                                ngram_range=(1, 1), stop_words="english")
+        tfidf_matrix = tfidf.fit_transform([str(i) for i in game_data['Summary']])
+        cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
+        indices = pd.Series(game_data.index, index=game_data['Name'])
+        idx = indices[game_id]
+        sim_scores = list(enumerate(cosine_sim[idx]))
+        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
+        sim_scores = sim_scores[1:6]
+        j = 0
+
+        for item in sim_scores:
             game_title = game_data[game_data.id == item[0]]['Name'].values[0]
+            game_reviews = game_data[game_data.id == item[0]]['Positive Reviews'].values[0]
             x = str(j + 1) + ': ' + str(game_title)
             st.write(x)
             st.write('  Similarity: ' + str(item[1]))
+            new_row = {"Name": game_title, "Positive Reviews": game_reviews}
+            chart = chart.append(new_row, ignore_index=True)
             j = j + 1
-            if j >= 5:
-                break
 
-        arrs = [0, 1]
-        rows, cols = 5, 5
-
-        arr = []
-        # for i in sorted_scores:
-        #     col = game_data[game_data.id == item[0]]['Name'].values[0]
-        #     col.append(item[1])
-        #     arr.append(col)
-        # print(arr)
+        st.caption("This is a bar graph showing these top 5 games and their amounts of positive reviews.")
+        pop_bar(chart)
 
 
 def get_map():
@@ -58,7 +59,7 @@ def get_map():
 
         df = game_data
 
-        vectorizer = TfidfVectorizer(lowercase=True, max_features=500, max_df=.12, min_df=1,
+        vectorizer = TfidfVectorizer(lowercase=True, max_features=9000, max_df=.12, min_df=10,
                                      ngram_range=(1, 1), stop_words="english")
 
         vectors = vectorizer.fit_transform(df['Summary'])
@@ -67,8 +68,7 @@ def get_map():
         dense = vectors.todense()
         denseList = dense.tolist()
         all_keywords = []
-        docFull = df
-        names = df["Name"]
+
         for summaries in denseList:
             x = 0
             keywords = []
@@ -77,11 +77,16 @@ def get_map():
                     keywords.append(feature_names[x])
                 x = x + 1
             all_keywords.append(keywords)
-
+        # with open("words.txt", "w", encoding="utf-8") as f:
+        #     for i in all_keywords:
+        #         for ind in i:
+        #             f.write(ind)
+        #             f.write("\n")
+        # print('words done')
         true_k = 6
+
         colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
-        colors3 = ['aqua', 'red', 'gold', 'royalblue', 'darkorange', 'green', 'purple', 'cyan', 'yellow', 'lime']
-        colors2 = [1, 2, 3, 4, 5]
+
         model = KMeans(n_clusters=true_k, init="k-means++", max_iter=100, n_init=1)
 
         model.fit(vectors)
@@ -91,7 +96,7 @@ def get_map():
 
         with open("results.txt", "w", encoding="utf-8") as f:
             for i in range(true_k):
-                f.write(f"Cluster {i}")
+                f.write(f"Cluster {i - 1}")
                 f.write("\n")
                 for ind in order_centroids[i, :10]:
                     f.write(" %s" % terms[ind], )
@@ -99,18 +104,13 @@ def get_map():
                 f.write("\n")
                 f.write("\n")
 
-        cosine_similarities = linear_kernel(vectors, vectors)
-        results = {}
-        print("done with txt")
-
         arr = []
-        rows, cols = 6, 10
+
         for i in range(true_k):
             col = [(f"Cluster {i}")]
             for ind in order_centroids[i, :10]:
                 col.append(terms[ind])
             arr.append(col)
-        print(arr)
 
         df = pd.DataFrame(arr)
         df = df.transpose()
@@ -118,12 +118,12 @@ def get_map():
         df = df[1:]  # take the data less the header row
         df.columns = new_header
 
+        image = Image.open('wordcloud.png')
+        st.caption("This is a WordCloud of all the keywords used for prediction.")
+        st.image(image)
+        st.caption("This is a table with the keywords organized into clusters for the prediction model.")
         st.table(df)
 
-        df2 = game_data
-        # Map
-        docFull = df2
-        names = df2["Name"]
         kmean_indices = model.fit_predict(vectors)
         pca = PCA(n_components=2)
         scatter_plot_points = pca.fit_transform(vectors.toarray())
@@ -131,12 +131,14 @@ def get_map():
         x_axis = [o[0] for o in scatter_plot_points]
         y_axis = [o[1] for o in scatter_plot_points]
 
-        fig, ax = plt.subplots(figsize=(25, 25))
-        ax.scatter(x_axis, y_axis, c=[colors[d] for d in kmean_indices], label="k")
-        legend_elements = [Line2D([0], [0], marker='o', color='w', label='Cluster {}'.format(i + 1),
+        fig, ax = plt.subplots(figsize=(10, 10))
+        ax.scatter(x_axis, y_axis, c=[colors[d] for d in kmean_indices])
+        legend_elements = [Line2D([0], [0], marker='o', color='w', label='Cluster {}'.format(i),
                                   markerfacecolor=mcolor, markersize=5) for i, mcolor in enumerate(colors)]
         plt.legend(handles=legend_elements, loc='upper right')
+        st.caption("This is a cluster map to provide visualization of how clusters are used to predict certain games.")
         st.pyplot(fig)
+
         fig, ax = plt.subplots(figsize=(10, 10))
         plt.hist(model.labels_, bins=true_k)
         rects = ax.patches
@@ -146,15 +148,27 @@ def get_map():
             height = rect.get_height()
             ax.text(rect.get_x() + rect.get_width() / 2, height + 0.01, label,
                     ha='center', va='bottom')
+        st.caption("This is a histogram showing how the keywords are clumped into each cluster.")
         st.pyplot(plt)
 
 
 game_data = pd.read_csv('file2.csv', encoding="utf-8", sep=';')
 icols = game_data.select_dtypes('integer').columns
 game_data[icols] = game_data[icols].apply(pd.to_numeric, downcast='integer')
-print(game_data.dtypes)
+
+
+# text_file = open("words.txt", "r")
+# text = text_file.read()
+# text_file.close()
+# wordcloud = WordCloud().generate(text)
+# plt.figure(figsize=(10, 5), facecolor='k')
+# plt.imshow(wordcloud, interpolation='bilinear')
+# plt.axis("off")
+# plt.tight_layout(pad=0)
+# plt.show()
 
 st.title("Game Recommendation System")
+st.text("Please select a game to help us find recommendations based off your interests.")
 
 col_one_list = game_data['Name'].tolist()
 sb_01 = st.selectbox('Select', col_one_list)
